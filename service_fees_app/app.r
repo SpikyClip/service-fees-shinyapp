@@ -33,11 +33,11 @@ ui = fluidPage(
                 label = "Plot Standardised or Actual Fees.",
                 choices = c("Standard", "Actual"),
                 ),
-            textInput(
+            selectInput(
                 inputId = "standard_provider",
-                label = "Specify the service provider to standardise all fees to [Defaults to the service provider in the first row.]",
-                placeholder = "Kat Carter Physio"
-                ),
+                label = "Reference Service Provider",
+                choices = NULL
+            )
             
         ),
         mainPanel = mainPanel(
@@ -49,6 +49,16 @@ ui = fluidPage(
 
 server = function(input, output) {
     
+    observeEvent(
+        get_df(),
+            {
+            service_providers = unique(get_df()$`Service Provider`)
+            updateSelectInput(
+                inputId = "standard_provider",
+                choices = service_providers
+                )
+            }
+        )
     
     get_df = reactive({
         if (!isTruthy(input$file1)) {
@@ -64,19 +74,19 @@ server = function(input, output) {
         return(df)
     })
     
-    get_standard_provider = reactive({
-        if (isTruthy(input$standard_provider)) {
-            standard_provider = input$standard_provider
-        } else {
-            df = get_df()
-            standard_provider = df[1, "Service Provider"] %>% as.character()
-        }
-        return(standard_provider)
-    })
+    # get_standard_provider = reactive({
+    #     if (isTruthy(input$standard_provider)) {
+    #         standard_provider = input$standard_provider
+    #     } else {
+    #         df = get_df()
+    #         standard_provider = df[1, "Service Provider"] %>% as.character()
+    #     }
+    #     return(standard_provider)
+    # })
     
     get_proc_df = reactive({
         df = get_df()
-        standard_provider = get_standard_provider()
+        standard_provider = input$standard_provider
         standard_df = df %>%
             filter(`Service Provider` == standard_provider) %>%
             rename(`Standard Service Duration (mins)` = `Actual Service Duration (mins)`) %>%
@@ -137,7 +147,7 @@ server = function(input, output) {
     })
     
     my_boxplot = reactive({
-        standard_provider = get_standard_provider()
+        standard_provider = input$standard_provider
         # Filter based on Mode
         mode = input$mode
         proc_df_filt = get_proc_df_filt() %>% filter(str_detect(`Fee Type`, mode))
