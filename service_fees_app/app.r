@@ -20,35 +20,53 @@ theme_set(
 )
 
 ui = fluidPage(
-    titlePanel("Service Fee Statistics"),
-    sidebarLayout(
-        sidebarPanel = sidebarPanel(
-            fileInput(
-                inputId = "file1",
-                label = "Choose a CSV file",
-                accept = c(".csv", ".xlsx")
-            ),
-            radioButtons(
-                inputId = "mode",
-                label = "Plot Standardised or Actual Fees.",
-                choices = c("Standard", "Actual"),
+    navbarPage(
+        title = "Service Fee Statistics",
+        tabPanel(
+            title = "Main",
+            # Sidebar contains introduction and settings
+            sidebarLayout(
+                sidebarPanel = sidebarPanel(
+                    h3("Introduction"),
+                    htmltools::includeMarkdown("md/intro.md"),
+                    h3("Settings"),
+                    # Takes in csv
+                    fileInput(
+                        inputId = "file1",
+                        label = "Choose a CSV file",
+                        accept = c(".csv", ".xlsx")
+                    ),
+                    # Standard vs Actual Fees mode
+                    radioButtons(
+                        inputId = "mode",
+                        label = "Plot Standardised or Actual Fees.",
+                        choices = c("Standard", "Actual"),
+                    ),
+                    # Dynamic ui listing possible reference service providers
+                    selectInput(
+                        inputId = "standard_provider",
+                        label = "Reference Service Provider",
+                        choices = NULL
+                    )
                 ),
-            selectInput(
-                inputId = "standard_provider",
-                label = "Reference Service Provider",
-                choices = NULL
+                # Mainpanel contains plot and summary statistics
+                mainPanel = mainPanel(
+                    plotOutput("boxplot"),
+                    h3("Summary Statistics"),
+                    tableOutput("summtable")
+                )
             )
-            
         ),
-        mainPanel = mainPanel(
-            plotOutput("boxplot"),
-            tableOutput("summtable")
+        # Additional tab displaying all data for troubleshooting
+        tabPanel(
+            title = "Table Data",
+            tableOutput("datatable")
         )
     )
 )
 
 server = function(input, output) {
-    
+    # When df is updated, update list of possible reference service providers
     observeEvent(
         get_df(),
             {
@@ -59,7 +77,8 @@ server = function(input, output) {
                 )
             }
         )
-    
+    # Get default df if csv is not uploaded, otherwise validate csv and get user
+    # submitted csv df.
     get_df = reactive({
         if (!isTruthy(input$file1)) {
             path = "data/physio_fees_raw.csv"
@@ -73,25 +92,17 @@ server = function(input, output) {
         df = read_csv(path)
         return(df)
     })
-    
-    # get_standard_provider = reactive({
-    #     if (isTruthy(input$standard_provider)) {
-    #         standard_provider = input$standard_provider
-    #     } else {
-    #         df = get_df()
-    #         standard_provider = df[1, "Service Provider"] %>% as.character()
-    #     }
-    #     return(standard_provider)
-    # })
-    
+    # Process fee rate columns and standardised times, returning processed df.
     get_proc_df = reactive({
         df = get_df()
         standard_provider = input$standard_provider
+        # Get standardised times for each service provided by standard_provider
         standard_df = df %>%
             filter(`Service Provider` == standard_provider) %>%
             rename(`Standard Service Duration (mins)` = `Actual Service Duration (mins)`) %>%
             select(`Service Category`, `Standard Service Duration (mins)`)
-        
+        # Add standardised times to proc_df by using a left join by Service 
+        # Category
         proc_df = df %>%
             left_join(standard_df, by = "Service Category") %>%
             mutate(
@@ -99,6 +110,7 @@ server = function(input, output) {
                 `Standard Fee ($)` = `Rate ($/min)` * `Standard Service Duration (mins)`,
                 across(c(`Service Provider`, `Service Category`), str_to_title)
             ) %>%
+            # Reorganise columns
             select(
                 `Service Provider`,
                 `Service Category`,
@@ -110,7 +122,9 @@ server = function(input, output) {
             )
         return(proc_df)
     })
-    
+    # Get filtered df without NA values (can occur if service providers offer a
+    # service that is not offered by the standard provider). Pivot standard and
+    # actual fees so it is easier to swap between the two plots.
     get_proc_df_filt = reactive({
         proc_df_filt = get_proc_df() %>% 
             filter(!is.na(`Standard Fee ($)`)) %>%
@@ -121,7 +135,8 @@ server = function(input, output) {
             )
         return(proc_df_filt)
     })
-    
+    # Get table of summary statistics such as count, mean duration, and mean
+    # actual and standard fees.
     get_summ_df = reactive({
         summ_df =
             get_proc_df() %>%
@@ -134,7 +149,8 @@ server = function(input, output) {
             )
         return(summ_df)
     })
-    
+    # Filter summary statistic df of NA values and pivot mean standard and 
+    # actual fees so it is easier to swap between the two plots.
     get_summ_df_filt = reactive({
         summ_df_filt = get_summ_df() %>%
             filter(!is.na(`Mean Standard Fee ($)`)) %>%
@@ -145,13 +161,15 @@ server = function(input, output) {
             )
         return(summ_df_filt)
     })
-    
+    # Generate boxplot based on mode and selected standard_provider
     my_boxplot = reactive({
+        # inputs
         standard_provider = input$standard_provider
-        # Filter based on Mode
         mode = input$mode
+        # Filter based on Mode
         proc_df_filt = get_proc_df_filt() %>% filter(str_detect(`Fee Type`, mode))
         summ_df_filt = get_summ_df_filt() %>% filter(str_detect(`Fee Type`, mode))
+
         title = paste(mode, "Fees by Service Category")
 
         proc_df_filt %>%
@@ -193,6 +211,8 @@ server = function(input, output) {
             theme(axis.title.y=element_text(angle=0)) +
             ggtitle(title)
     })
+    # Server Outputs
+    output$datatable = renderTable({get_proc_df()})
     output$summtable = renderTable({get_summ_df()})
     output$boxplot = renderPlot({my_boxplot()})
 }
