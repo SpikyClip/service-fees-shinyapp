@@ -3,3 +3,4 @@ scratch*
 *.Rproj
 renv
 *.csv
+.Rproj.user
