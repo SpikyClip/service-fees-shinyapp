@@ -3,6 +3,7 @@ library(hrbrthemes)
 library(showtext)
 library(ggpubr)
 library(scales)
+library(DT)
 
 # Load fonts and set theme
 font_add("IBMPlexSans", regular = "IBMPlexSans-Regular.ttf")
@@ -53,14 +54,14 @@ ui = fluidPage(
                 mainPanel = mainPanel(
                     plotOutput("boxplot"),
                     h3("Summary Statistics"),
-                    tableOutput("summtable")
+                    dataTableOutput("summtable")
                 )
             )
         ),
         # Additional tab displaying all data for troubleshooting
         tabPanel(
             title = "Table Data",
-            tableOutput("datatable")
+            dataTableOutput("datatable")
         )
     )
 )
@@ -108,7 +109,8 @@ server = function(input, output) {
             mutate(
                 `Rate ($/min)` = `Actual Fee ($)` / `Actual Service Duration (mins)`,
                 `Standard Fee ($)` = `Rate ($/min)` * `Standard Service Duration (mins)`,
-                across(c(`Service Provider`, `Service Category`), str_to_title)
+                across(c(`Service Provider`, `Service Category`), str_to_title),
+                across(c(`Rate ($/min)`, `Standard Fee ($)`, `Actual Fee ($)`), round, 2)
             ) %>%
             # Reorganise columns
             select(
@@ -212,8 +214,8 @@ server = function(input, output) {
             ggtitle(title)
     })
     # Server Outputs
-    output$datatable = renderTable({get_proc_df()})
-    output$summtable = renderTable({get_summ_df()})
+    output$datatable = renderDataTable({get_proc_df()})
+    output$summtable = renderDataTable({get_summ_df()})
     output$boxplot = renderPlot({my_boxplot()})
 }
 
