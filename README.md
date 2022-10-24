@@ -11,7 +11,7 @@ Unassigned (replace all with desired value):
 
 -->
 
-# Title
+# Service Fee Statistics
 
 [![GitHub Stars](https://img.shields.io/github/stars/SpikyClip/service-fees-shinyapp.svg)](https://github.com/SpikyClip/service-fees-shinyapp/stargazers)
 [![GitHub Issues](https://img.shields.io/github/issues/SpikyClip/service-fees-shinyapp.svg)](https://github.com/SpikyClip/service-fees-shinyapp/issues)
