@@ -1,7 +1,6 @@
+library(shiny)
 library(tidyverse)
-library(hrbrthemes)
 library(showtext)
-library(ggpubr)
 library(scales)
 library(DT)
 library(tools)
@@ -12,12 +11,47 @@ font_add("IBMPlexSans-Bold", regular = "IBMPlexSans-Bold.ttf")
 font_add("IBMPlexSans-Medium", regular = "IBMPlexSans-Medium.ttf")
 showtext_auto()
 theme_set(
-    theme_ipsum_ps(
-        axis_title_size = 11.5,
-        axis_text_size = 10,
-        grid = F,
-        axis = T,
-        ticks = F
+    theme(
+        # Base
+        line = element_line(
+            size = 0.25,
+            color = "#BFBEBE",
+            linetype = 1
+        ),
+        text = element_text(
+            size = 16,
+            family = "IBMPlexSans",
+            hjust = 0,
+            color = "#78797D"
+            ),
+        title = element_text(
+            size = rel(1.5),
+            family = "IBMPlexSans-Bold",
+            color = "#646466"
+            ),
+        # Panel
+        panel.grid.major = element_blank(),
+        panel.grid.minor = element_blank(),
+        panel.background = element_blank(),
+        plot.margin = margin(30, 30, 30, 30),
+        # Axes
+        axis.line = element_line(),
+        axis.ticks = element_line(),
+        axis.title = element_text(
+            size = rel(0.8),
+            family = "IBMPlexSans-Medium"
+            ),
+        axis.title.y = element_text(vjust = 1, angle = 0),
+        axis.text = element_text(
+            size = rel(0.8),
+            hjust = 0.5
+            ),
+        # Legend
+        legend.title = element_text(
+            size = rel(0.8),
+            family = "IBMPlexSans-Medium"
+            ),
+        legend.key = element_blank()
     )
 )
 
@@ -58,28 +92,40 @@ ui = fluidPage(
                         h4("Template"),
                         downloadButton(
                             outputId = "template_df_dl",
-                            label = "Download Template CSV"
+                            label = "Download Template (.CSV)"
                         ),
                     ),
                     fluidRow(
                         h4("Data"),
                         downloadButton(
                             outputId = "proc_df_dl",
-                            label = "Download Data"
+                            label = "Download Data (.CSV)"
                         ),
                         downloadButton(
                             outputId = "summ_df_dl",
-                            label = "Download Summary Statistics"
+                            label = "Download Summary Statistics (.CSV)"
                         ),
                     ),
                     fluidRow(
-                        h4("Graph"),
+                        h4("Plot"),
+                        radioButtons(
+                            inputId = "plot_resolution",
+                            label = "Resolution",
+                            inline = TRUE,
+                            choiceNames = c("Retina (320)", "Print (300)", "Screen (72)"),
+                            choiceValues = c("retina", "print", "screen")
+                        ),
+                        radioButtons(
+                            inputId = "plot_format",
+                            label = "Format",
+                            inline = TRUE,
+                            choices = c("png", "tiff","jpeg")
+                        ),
                         downloadButton(
-                            outputId = "graph_dl",
-                            label = "Download Graph"
+                            outputId = "plot_dl",
+                            label = "Download Plot"
                         )
                     )
-
                 ),
                 # Mainpanel contains plot and summary statistics
                 mainPanel = mainPanel(
@@ -238,8 +284,8 @@ server = function(input, output) {
         proc_df_filt %>%
             ggplot(aes(x = `Fee ($)`, y = `Service Category`)) +
             # Boxplot and errorbar
-            stat_boxplot(geom ='errorbar', width = 0.5, color = "gray45") +
-            geom_boxplot(color = "gray45") +
+            stat_boxplot(geom ='errorbar', width = 0.5, color = "#BFBEBE") +
+            geom_boxplot(color = "#BFBEBE") +
             # Individual and mean points
             geom_point(aes(color = `Service Provider`), alpha = 0.75) +
             geom_point(
@@ -271,7 +317,6 @@ server = function(input, output) {
             # Formatting
             scale_color_manual(values=setNames("limegreen", standard_provider)) +
             scale_x_continuous(labels = label_dollar()) +
-            theme(axis.title.y=element_text(angle=0)) +
             ggtitle(title)
     })
 
@@ -286,6 +331,7 @@ server = function(input, output) {
     output$boxplot = renderPlot({my_boxplot()})
     
     # External
+    # Template CSV
     output$template_df_dl = downloadHandler(
         filename = "service_fees_template.csv",
         content = function(file) {
@@ -293,6 +339,7 @@ server = function(input, output) {
             file.copy(template_path, file)
         }
     )
+    # Processed data CSV
     output$proc_df_dl = downloadHandler(
         filename = function() {
             paste0(get_input_filename(), "_processed", ".csv")
@@ -301,6 +348,7 @@ server = function(input, output) {
             write_csv(get_proc_df(), file)
         }
     )
+    # Summary Statistics CSV
     output$summ_df_dl = downloadHandler(
         filename = function() {
             paste0(get_input_filename(), "_summary", ".csv")
@@ -309,7 +357,19 @@ server = function(input, output) {
             write_csv(get_summ_df(), file)
         }
     )
-    # output$graph_dl
+    # Plot Download
+    output$plot_dl = downloadHandler(
+        filename = function() {
+            paste0(get_input_filename(), "_boxplot", ".", input$plot_format)
+        },
+        content = function(file) {
+            ggsave(file,
+                   plot = my_boxplot(),
+                   device = input$plot_format,
+                   bg = "white"
+                   )
+        }
+    )
 }
 
 shinyApp(ui = ui, server = server)
