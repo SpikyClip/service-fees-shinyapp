@@ -1,5 +1,5 @@
 scratch*
 .R*
 *.Rproj
-*.csv
+physio_fees_raw_true.csv
 .Rproj.user

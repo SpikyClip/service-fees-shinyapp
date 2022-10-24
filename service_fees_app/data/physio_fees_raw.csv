@@ -1,0 +1,37 @@
+﻿Service Provider,Service Category,Actual Service Duration (mins),Actual Fee ($)
+Service Provider A,initial,45,125
+Service Provider A,standard follow up,30,100
+Service Provider A,long follow up,45,130
+Service Provider A,extended consultation,60,160
+Service Provider A,clinical exercise class,50,50
+Service Provider B,initial,30,0
+Service Provider B,standard follow up,20,159.5
+Service Provider B,long follow up,40,161.5
+Service Provider C,initial,30,107.5
+Service Provider C,standard follow up,30,107.5
+Service Provider C,extended consultation,60,215
+Service Provider D,initial,30,129
+Service Provider D,standard follow up,30,103
+Service Provider D,extended consultation,60,152
+Service Provider E,initial,40,142
+Service Provider E,standard follow up,30,127
+Service Provider F,initial,30,81
+Service Provider F,standard follow up,30,66
+Service Provider F,long follow up,45,120
+Service Provider F,extended consultation,60,160
+Service Provider F,clinical exercise class,50,58
+Service Provider G,initial,60,165
+Service Provider G,standard follow up,30,125
+Service Provider G,extended consultation,60,165
+Service Provider H,initial,45,100
+Service Provider H,standard follow up,30,95
+Service Provider H,clinical exercise class,45,48
+Service Provider I,initial,45,136.5
+Service Provider I,standard follow up,30,115.5
+Service Provider I,long follow up,45,136.5
+Service Provider I,extended consultation,60,157.5
+Service Provider J,standard follow up,30,89
+Service Provider J,extended consultation,60,135
+Service Provider K,initial,40,125
+Service Provider K,standard follow up,30,90
+Service Provider K,clinical exercise class,45,44
