@@ -1,6 +1,5 @@
 scratch*
 .R*
 *.Rproj
-renv
 *.csv
 .Rproj.user
