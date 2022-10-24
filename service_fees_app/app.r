@@ -4,6 +4,7 @@ library(showtext)
 library(ggpubr)
 library(scales)
 library(DT)
+library(tools)
 
 # Load fonts and set theme
 font_add("IBMPlexSans", regular = "IBMPlexSans-Regular.ttf")
@@ -20,6 +21,9 @@ theme_set(
     )
 )
 
+# 
+# User Interface
+# 
 ui = fluidPage(
     navbarPage(
         title = "Service Fee Statistics",
@@ -33,7 +37,7 @@ ui = fluidPage(
                     h3("Settings"),
                     # Takes in csv
                     fileInput(
-                        inputId = "file1",
+                        inputId = "raw_csv",
                         label = "Choose a CSV file",
                         accept = c(".csv", ".xlsx")
                     ),
@@ -48,7 +52,34 @@ ui = fluidPage(
                         inputId = "standard_provider",
                         label = "Reference Service Provider",
                         choices = NULL
+                    ),
+                    h3("Download"),
+                    fluidRow(
+                        h4("Template"),
+                        downloadButton(
+                            outputId = "template_df_dl",
+                            label = "Download Template CSV"
+                        ),
+                    ),
+                    fluidRow(
+                        h4("Data"),
+                        downloadButton(
+                            outputId = "proc_df_dl",
+                            label = "Download Data"
+                        ),
+                        downloadButton(
+                            outputId = "summ_df_dl",
+                            label = "Download Summary Statistics"
+                        ),
+                    ),
+                    fluidRow(
+                        h4("Graph"),
+                        downloadButton(
+                            outputId = "graph_dl",
+                            label = "Download Graph"
+                        )
                     )
+
                 ),
                 # Mainpanel contains plot and summary statistics
                 mainPanel = mainPanel(
@@ -65,8 +96,12 @@ ui = fluidPage(
         )
     )
 )
-
+# 
+# Server Function
+# 
 server = function(input, output) {
+
+
     # When df is updated, update list of possible reference service providers
     observeEvent(
         get_df(),
@@ -78,21 +113,39 @@ server = function(input, output) {
                 )
             }
         )
-    # Get default df if csv is not uploaded, otherwise validate csv and get user
-    # submitted csv df.
+
+
+    # Get default path if csv is not uploaded, otherwise validate csv and get
+    # user submitted path.
+    get_input_path = reactive({
+            if (!isTruthy(input$raw_csv)) {
+                path = "data/physio_fees_raw.csv"
+            } else {
+                file = input$raw_csv
+                ext = file_ext(file$datapath)
+                req(file)
+                validate(need(ext == "csv", "Please upload a csv file."))
+                path = file$datapath
+            }
+            return(file.path(path))
+    })
+
+
+    # Get input filename for naming output downloads
+    get_input_filename = reactive({
+        input_filename = get_input_path() %>%
+            basename() %>%
+            file_path_sans_ext()
+        return(input_filename)
+    })
+
+    # Get unprocessed dataframe
     get_df = reactive({
-        if (!isTruthy(input$file1)) {
-            path = "data/physio_fees_raw.csv"
-        } else {
-            file = input$file1
-            ext = tools::file_ext(file$datapath)
-            req(file)
-            validate(need(ext == "csv", "Please upload a csv file."))
-            path = file$datapath
-        }
-        df = read_csv(path)
+        df = read_csv(get_input_path())
         return(df)
     })
+
+
     # Process fee rate columns and standardised times, returning processed df.
     get_proc_df = reactive({
         df = get_df()
@@ -124,6 +177,8 @@ server = function(input, output) {
             )
         return(proc_df)
     })
+
+
     # Get filtered df without NA values (can occur if service providers offer a
     # service that is not offered by the standard provider). Pivot standard and
     # actual fees so it is easier to swap between the two plots.
@@ -137,6 +192,8 @@ server = function(input, output) {
             )
         return(proc_df_filt)
     })
+
+
     # Get table of summary statistics such as count, mean duration, and mean
     # actual and standard fees.
     get_summ_df = reactive({
@@ -151,6 +208,8 @@ server = function(input, output) {
             )
         return(summ_df)
     })
+
+
     # Filter summary statistic df of NA values and pivot mean standard and 
     # actual fees so it is easier to swap between the two plots.
     get_summ_df_filt = reactive({
@@ -163,6 +222,8 @@ server = function(input, output) {
             )
         return(summ_df_filt)
     })
+
+
     # Generate boxplot based on mode and selected standard_provider
     my_boxplot = reactive({
         # inputs
@@ -213,10 +274,42 @@ server = function(input, output) {
             theme(axis.title.y=element_text(angle=0)) +
             ggtitle(title)
     })
+
+
+    # 
     # Server Outputs
+    # 
+    
+    # Internal
     output$datatable = renderDataTable({get_proc_df()})
     output$summtable = renderDataTable({get_summ_df()})
     output$boxplot = renderPlot({my_boxplot()})
+    
+    # External
+    output$template_df_dl = downloadHandler(
+        filename = "service_fees_template.csv",
+        content = function(file) {
+            template_path = file.path("data/service_fees_template.csv")
+            file.copy(template_path, file)
+        }
+    )
+    output$proc_df_dl = downloadHandler(
+        filename = function() {
+            paste0(get_input_filename(), "_processed", ".csv")
+        },
+        content = function(file) {
+            write_csv(get_proc_df(), file)
+        }
+    )
+    output$summ_df_dl = downloadHandler(
+        filename = function() {
+            paste0(get_input_filename(), "_summary", ".csv")
+        },
+        content = function(file) {
+            write_csv(get_summ_df(), file)
+        }
+    )
+    # output$graph_dl
 }
 
 shinyApp(ui = ui, server = server)
