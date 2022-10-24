@@ -20,7 +20,7 @@ Unassigned (replace all with desired value):
 
 A Rshiny app for comparing standardised service fees.
 
-![Screenshot](img\screenshot.png)
+![Screenshot](img/screenshot.png)
 
 ## Introduction
 
