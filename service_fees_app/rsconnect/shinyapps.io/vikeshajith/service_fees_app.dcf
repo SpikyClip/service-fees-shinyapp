@@ -1,0 +1,14 @@
+name: service_fees_app
+title: service_fees_app
+username:
+account: vikeshajith
+server: shinyapps.io
+hostUrl: https://api.shinyapps.io/v1
+appId: 7396701
+bundleId: 6440686
+url: https://vikeshajith.shinyapps.io/service_fees_app/
+when: 1666735562.70059
+lastSyncTime: 1666735562.7006
+asMultiple: FALSE
+asStatic: FALSE
+ignoredFiles: data/physio_fees_raw_true.csv

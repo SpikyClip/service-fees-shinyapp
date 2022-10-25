@@ -4,12 +4,25 @@ library(showtext)
 library(scales)
 library(DT)
 library(tools)
+library(markdown)
+
+if (Sys.info()[['sysname']] == 'Linux') {
+    dir.create('~/.fonts')
+    fonts = c(
+        "www/IBMPlexSans-Regular.ttf",
+        "www/IBMPlexSans-Bold.ttf",
+        "www/IBMPlexSans-Medium.ttf"
+        )
+    file.copy(fonts, "~/.fonts")
+    system('fc-cache -f ~/.fonts')
+} else if (Sys.info()[['sysname']] == 'Windows') {
+    font_add("IBMPlexSans", regular = "IBMPlexSans-Regular.ttf")
+    font_add("IBMPlexSans-Bold", regular = "IBMPlexSans-Bold.ttf")
+    font_add("IBMPlexSans-Medium", regular = "IBMPlexSans-Medium.ttf")
+    showtext_auto()
+}
 
 # Load fonts and set theme
-font_add("IBMPlexSans", regular = "IBMPlexSans-Regular.ttf")
-font_add("IBMPlexSans-Bold", regular = "IBMPlexSans-Bold.ttf")
-font_add("IBMPlexSans-Medium", regular = "IBMPlexSans-Medium.ttf")
-showtext_auto()
 theme_set(
     theme(
         # Base
