@@ -10,4 +10,4 @@ provider.
 As each service provider may spend more or less time on a service than others,
 the `Standard Fees` setting normalises fees by `($/min)` against the reference
 service providers service times. This makes it easier to compare fees across
-service providers.
+service providers. Mean values are plotted in red.
