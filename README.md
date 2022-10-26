@@ -22,6 +22,8 @@ A Rshiny app for comparing standardised service fees.
 
 ![Screenshot](img/screenshot.png)
 
+## [Link to App on shiny.io](https://vikeshajith.shinyapps.io/service_fees_app/)
+
 ## Introduction
 
 This Rshiny app was developed to compare the standardised price of various
