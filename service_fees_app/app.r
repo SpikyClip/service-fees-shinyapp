@@ -6,6 +6,7 @@ library(DT)
 library(tools)
 library(markdown)
 
+# Add fonts to shiny linux server
 if (Sys.info()[['sysname']] == 'Linux') {
     dir.create('~/.fonts')
     fonts = c(
@@ -15,14 +16,14 @@ if (Sys.info()[['sysname']] == 'Linux') {
         )
     file.copy(fonts, "~/.fonts")
     system('fc-cache -f ~/.fonts')
-} else if (Sys.info()[['sysname']] == 'Windows') {
-    font_add("IBMPlexSans", regular = "IBMPlexSans-Regular.ttf")
-    font_add("IBMPlexSans-Bold", regular = "IBMPlexSans-Bold.ttf")
-    font_add("IBMPlexSans-Medium", regular = "IBMPlexSans-Medium.ttf")
-    showtext_auto()
 }
 
 # Load fonts and set theme
+font_add("IBMPlexSans", regular = "IBMPlexSans-Regular.ttf")
+font_add("IBMPlexSans-Bold", regular = "IBMPlexSans-Bold.ttf")
+font_add("IBMPlexSans-Medium", regular = "IBMPlexSans-Medium.ttf")
+showtext_auto()
+
 theme_set(
     theme(
         # Base
@@ -121,13 +122,6 @@ ui = fluidPage(
                     ),
                     fluidRow(
                         h4("Plot"),
-                        radioButtons(
-                            inputId = "plot_resolution",
-                            label = "Resolution",
-                            inline = TRUE,
-                            choiceNames = c("Retina (320)", "Print (300)", "Screen (72)"),
-                            choiceValues = c("retina", "print", "screen")
-                        ),
                         radioButtons(
                             inputId = "plot_format",
                             label = "Format",
@@ -376,9 +370,15 @@ server = function(input, output) {
             paste0(get_input_filename(), "_boxplot", ".", input$plot_format)
         },
         content = function(file) {
+            width = 14
+            plot_resolution = 300
             ggsave(file,
                    plot = my_boxplot(),
                    device = input$plot_format,
+                   dpi = plot_resolution,
+                   width = width,
+                   height = width / 2,
+                   scale = 0.6,
                    bg = "white"
                    )
         }
