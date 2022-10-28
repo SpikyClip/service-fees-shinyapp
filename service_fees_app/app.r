@@ -6,19 +6,9 @@ library(DT)
 library(tools)
 library(markdown)
 
-# Add fonts to shiny linux server
-if (Sys.info()[['sysname']] == 'Linux') {
-    dir.create('~/.fonts')
-    fonts = c(
-        "www/IBMPlexSans-Regular.ttf",
-        "www/IBMPlexSans-Bold.ttf",
-        "www/IBMPlexSans-Medium.ttf"
-        )
-    file.copy(fonts, "~/.fonts")
-    system('fc-cache -f ~/.fonts')
-}
-
 # Load fonts and set theme
+font_paths("fonts")
+
 font_add("IBMPlexSans", regular = "IBMPlexSans-Regular.ttf")
 font_add("IBMPlexSans-Bold", regular = "IBMPlexSans-Bold.ttf")
 font_add("IBMPlexSans-Medium", regular = "IBMPlexSans-Medium.ttf")
